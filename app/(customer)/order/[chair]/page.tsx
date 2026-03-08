@@ -1,12 +1,13 @@
 "use client"
 
+import { use } from "react"
 import CartButton from "@/components/customer/CartButton"
 import DrinkList from "@/components/customer/DrinkList"
+import OrderStatusTracker from "@/components/customer/OrderStatusTracker"
 import { useDrinks } from "@/hooks/useDrinks"
 import { CartProvider } from "@/context/CartContext"
 
-export default function Page({ params }: { params: { chair: string } }) {
-
+function OrderContent({ chair }: { chair: string }) {
     const { drinks, loading, error } = useDrinks()
 
     if (loading) {
@@ -26,11 +27,20 @@ export default function Page({ params }: { params: { chair: string } }) {
     }
 
     return (
+        <div>
+            <OrderStatusTracker />
+            <DrinkList drinks={drinks} />
+            <CartButton chairNumber={parseInt(chair)} />
+        </div>
+    )
+}
+
+export default function Page({ params }: { params: Promise<{ chair: string }> }) {
+    const { chair } = use(params)
+
+    return (
         <CartProvider>
-            <div>
-                <DrinkList drinks={drinks} />
-                <CartButton />
-            </div>
+            <OrderContent chair={chair} />
         </CartProvider>
     )
 }

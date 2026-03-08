@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
 
 type Drink = {
     id: string
@@ -21,12 +21,50 @@ type CartContextType = {
     totalItems: number
     totalPrice: number
     clearCart: () => void
+    activeOrderIds: string[]
+    addOrderId: (id: string) => void
+    removeOrderId: (id: string) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<Record<string, CartItem>>({})
+    const [activeOrderIds, setActiveOrderIds] = useState<string[]>([])
+
+    // Load activeOrderIds from localStorage on mount
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem("activeOrderIds")
+            if (stored) {
+                setActiveOrderIds(JSON.parse(stored))
+            }
+        } catch {
+            // ignore parse errors
+        }
+    }, [])
+
+    // Add a new order ID
+    const addOrderId = useCallback((id: string) => {
+        setActiveOrderIds((prev) => {
+            const updated = [...prev, id]
+            localStorage.setItem("activeOrderIds", JSON.stringify(updated))
+            return updated
+        })
+    }, [])
+
+    // Remove a specific order ID (when done)
+    const removeOrderId = useCallback((id: string) => {
+        setActiveOrderIds((prev) => {
+            const updated = prev.filter((oid) => oid !== id)
+            if (updated.length > 0) {
+                localStorage.setItem("activeOrderIds", JSON.stringify(updated))
+            } else {
+                localStorage.removeItem("activeOrderIds")
+            }
+            return updated
+        })
+    }, [])
 
     const increase = (drink: Drink) => {
         setItems((prev) => ({
@@ -72,7 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     return (
         <CartContext.Provider
-            value={{ items, increase, decrease, getQuantity, totalItems, totalPrice, clearCart }}
+            value={{ items, increase, decrease, getQuantity, totalItems, totalPrice, clearCart, activeOrderIds, addOrderId, removeOrderId }}
         >
             {children}
         </CartContext.Provider>
