@@ -21,7 +21,7 @@ export default function DrinkCard({ drink }: DrinkCardProps) {
                 <div className="flex flex-col">
                     <h3 className="text-lg font-semibold">{drink.name}</h3>
                     <span className="text-sm text-muted-foreground">
-                        €{drink.price}
+                        ₹{drink.price}
                     </span>
                 </div>
 
