@@ -7,6 +7,8 @@ type Drink = {
     id: string
     name: string
     price: number
+    image_url?: string
+    available: boolean
 }
 
 export function useDrinks() {
@@ -18,7 +20,7 @@ export function useDrinks() {
         async function fetchDrinks() {
             const { data, error } = await supabase
                 .from("drinks")
-                .select("id, name, price")
+                .select("id, name, price, image_url, available")
                 .order("name")
 
             if (error) {

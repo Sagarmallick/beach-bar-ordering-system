@@ -6,6 +6,8 @@ type Drink = {
     id: string
     name: string
     price: number
+    image_url?: string
+    available: boolean
 }
 
 type DrinkListProps = {

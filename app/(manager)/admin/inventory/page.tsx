@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useInventory } from "@/hooks/useInventory"
+import { uploadDrinkImage } from "@/lib/uploadImage"
+import { generateDrinkImage } from "@/lib/generateImage"
 
 export default function InventoryPage() {
     const { drinks, loading, error, addDrink, toggleAvailability, deleteDrink } = useInventory()
@@ -12,7 +14,39 @@ export default function InventoryPage() {
     const [name, setName] = useState("")
     const [price, setPrice] = useState("")
     const [category, setCategory] = useState("")
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [submitting, setSubmitting] = useState(false)
+    const [generating, setGenerating] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setImageFile(file)
+            setImagePreview(URL.createObjectURL(file))
+        }
+    }
+
+    const handleGenerate = async () => {
+        if (!name.trim()) {
+            alert("Please enter a drink name first so we can generate an image for it.")
+            return
+        }
+
+        setGenerating(true)
+        try {
+            const file = await generateDrinkImage(name)
+            setImageFile(file)
+            setImagePreview(URL.createObjectURL(file))
+            // Clear the file input since we're using AI generated image
+            if (fileInputRef.current) fileInputRef.current.value = ""
+        } catch (err) {
+            alert(err instanceof Error ? err.message : "Failed to generate image")
+        } finally {
+            setGenerating(false)
+        }
+    }
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -20,10 +54,17 @@ export default function InventoryPage() {
 
         setSubmitting(true)
         try {
-            await addDrink({ name, price: parseFloat(price), category })
+            let image_url: string | undefined
+            if (imageFile) {
+                image_url = await uploadDrinkImage(imageFile)
+            }
+            await addDrink({ name, price: parseFloat(price), category, image_url })
             setName("")
             setPrice("")
             setCategory("")
+            setImageFile(null)
+            setImagePreview(null)
+            if (fileInputRef.current) fileInputRef.current.value = ""
             setShowForm(false)
         } catch (err) {
             alert(err instanceof Error ? err.message : "Failed to add drink")
@@ -98,7 +139,76 @@ export default function InventoryPage() {
                                     />
                                 </div>
                             </div>
-                            <Button type="submit" disabled={submitting} className="w-fit">
+
+                            {/* Image Section */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium">Drink Image</label>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="rounded-md border bg-background py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-primary-foreground file:text-sm file:font-medium file:cursor-pointer"
+                                    />
+                                    <span className="text-sm text-muted-foreground">or</span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleGenerate}
+                                        disabled={generating}
+                                    >
+                                        {generating ? (
+                                            <span className="flex items-center gap-2">
+                                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                </svg>
+                                                Generating...
+                                            </span>
+                                        ) : (
+                                            "Generate with AI"
+                                        )}
+                                    </Button>
+                                </div>
+
+                                {/* Preview */}
+                                {imagePreview && (
+                                    <div className="flex items-end gap-3 mt-2">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="w-24 h-24 rounded-lg object-cover border"
+                                        />
+                                        <div className="flex flex-col gap-1">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleGenerate}
+                                                disabled={generating}
+                                            >
+                                                ↻ Regenerate
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-red-500"
+                                                onClick={() => {
+                                                    setImageFile(null)
+                                                    setImagePreview(null)
+                                                    if (fileInputRef.current) fileInputRef.current.value = ""
+                                                }}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <Button type="submit" disabled={submitting || generating} className="w-fit">
                                 {submitting ? "Adding..." : "Add Drink"}
                             </Button>
                         </form>
@@ -113,6 +223,7 @@ export default function InventoryPage() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b bg-muted/50">
+                                    <th className="text-left px-4 py-3 font-medium">Image</th>
                                     <th className="text-left px-4 py-3 font-medium">Name</th>
                                     <th className="text-left px-4 py-3 font-medium">Category</th>
                                     <th className="text-left px-4 py-3 font-medium">Price</th>
@@ -123,6 +234,13 @@ export default function InventoryPage() {
                             <tbody>
                                 {drinks.map((drink) => (
                                     <tr key={drink.id} className="border-b last:border-0">
+                                        <td className="px-4 py-3">
+                                            {drink.image_url ? (
+                                                <img src={drink.image_url} alt={drink.name} className="w-10 h-10 rounded object-cover" />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground">N/A</div>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3 font-medium">{drink.name}</td>
                                         <td className="px-4 py-3 text-muted-foreground">{drink.category}</td>
                                         <td className="px-4 py-3">₹{Number(drink.price).toFixed(2)}</td>
