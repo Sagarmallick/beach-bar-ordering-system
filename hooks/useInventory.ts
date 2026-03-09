@@ -9,6 +9,7 @@ export type Drink = {
     price: number
     category: string
     available: boolean
+    image_url?: string
 }
 
 export function useInventory() {
@@ -35,7 +36,7 @@ export function useInventory() {
         fetchDrinks()
     }, [fetchDrinks])
 
-    const addDrink = async (drink: { name: string; price: number; category: string }) => {
+    const addDrink = async (drink: { name: string; price: number; category: string; image_url?: string }) => {
         const { error } = await supabase
             .from("drinks")
             .insert({ ...drink, available: true })
