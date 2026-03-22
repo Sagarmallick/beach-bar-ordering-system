@@ -12,15 +12,19 @@ export type Drink = {
     image_url?: string
 }
 
-export function useInventory() {
+export function useInventory(vendorId?: string) {
     const [drinks, setDrinks] = useState<Drink[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     const fetchDrinks = useCallback(async () => {
-        const { data, error } = await supabase
+        let query = supabase
             .from("drinks")
             .select("*")
+
+        if (vendorId) query = query.eq("vendor_id", vendorId)
+
+        const { data, error } = await query
             .order("category")
             .order("name")
 
@@ -30,16 +34,19 @@ export function useInventory() {
             setDrinks(data ?? [])
         }
         setLoading(false)
-    }, [])
+    }, [vendorId])
 
     useEffect(() => {
+        if (!vendorId) return
         fetchDrinks()
-    }, [fetchDrinks])
+    }, [fetchDrinks, vendorId])
 
     const addDrink = async (drink: { name: string; price: number; category: string; image_url?: string }) => {
+        if (!vendorId) throw new Error("No vendor ID provided")
+
         const { error } = await supabase
             .from("drinks")
-            .insert({ ...drink, available: true })
+            .insert({ ...drink, vendor_id: vendorId, available: true })
 
         if (error) throw new Error(error.message)
         await fetchDrinks()

@@ -2,9 +2,11 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { useAdminStats } from "@/hooks/useAdminStats"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function AdminDashboard() {
-    const { stats, loading } = useAdminStats()
+    const { profile } = useAuth()
+    const { stats, loading } = useAdminStats(profile?.vendor_id || undefined)
 
     if (loading) {
         return (

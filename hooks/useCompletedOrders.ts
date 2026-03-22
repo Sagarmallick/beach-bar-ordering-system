@@ -20,14 +20,16 @@ export type CompletedOrder = {
     order_items: OrderItem[]
 }
 
-export function useCompletedOrders() {
+export function useCompletedOrders(vendorId?: string) {
     const [orders, setOrders] = useState<CompletedOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
+        if (!vendorId) return
+
         async function fetchOrders() {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("orders")
                 .select(`
                     id,
@@ -42,6 +44,10 @@ export function useCompletedOrders() {
                     )
                 `)
                 .eq("status", "done")
+
+            if (vendorId) query = query.eq("vendor_id", vendorId)
+
+            const { data, error } = await query
                 .order("created_at", { ascending: false })
 
             if (error) {
@@ -53,7 +59,7 @@ export function useCompletedOrders() {
         }
 
         fetchOrders()
-    }, [])
+    }, [vendorId])
 
     return { orders, loading, error }
 }

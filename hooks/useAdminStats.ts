@@ -9,7 +9,7 @@ type AdminStats = {
     activeOrders: number
 }
 
-export function useAdminStats() {
+export function useAdminStats(vendorId?: string) {
     const [stats, setStats] = useState<AdminStats>({
         totalOrdersToday: 0,
         totalRevenue: 0,
@@ -18,21 +18,29 @@ export function useAdminStats() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        if (!vendorId) return
+
         async function fetchStats() {
             const todayStart = new Date()
             todayStart.setHours(0, 0, 0, 0)
 
             // Total orders today
-            const { count: todayCount } = await supabase
+            let todayQuery = supabase
                 .from("orders")
                 .select("*", { count: "exact", head: true })
                 .gte("created_at", todayStart.toISOString())
 
+            if (vendorId) todayQuery = todayQuery.eq("vendor_id", vendorId)
+            const { count: todayCount } = await todayQuery
+
             // Total revenue (all time)
-            const { data: revenueData } = await supabase
+            let revenueQuery = supabase
                 .from("orders")
                 .select("total_price")
                 .eq("status", "done")
+
+            if (vendorId) revenueQuery = revenueQuery.eq("vendor_id", vendorId)
+            const { data: revenueData } = await revenueQuery
 
             const totalRevenue = revenueData?.reduce(
                 (sum, order) => sum + Number(order.total_price),
@@ -40,10 +48,13 @@ export function useAdminStats() {
             ) ?? 0
 
             // Active orders (new + preparing)
-            const { count: activeCount } = await supabase
+            let activeQuery = supabase
                 .from("orders")
                 .select("*", { count: "exact", head: true })
                 .in("status", ["new", "preparing"])
+
+            if (vendorId) activeQuery = activeQuery.eq("vendor_id", vendorId)
+            const { count: activeCount } = await activeQuery
 
             setStats({
                 totalOrdersToday: todayCount ?? 0,
@@ -54,7 +65,7 @@ export function useAdminStats() {
         }
 
         fetchStats()
-    }, [])
+    }, [vendorId])
 
     return { stats, loading }
 }

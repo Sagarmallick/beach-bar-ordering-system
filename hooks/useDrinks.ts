@@ -11,17 +11,24 @@ type Drink = {
     available: boolean
 }
 
-export function useDrinks() {
+export function useDrinks(vendorId?: string) {
     const [drinks, setDrinks] = useState<Drink[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
+        if (!vendorId) return
+
         async function fetchDrinks() {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("drinks")
                 .select("id, name, price, image_url, available")
-                .order("name")
+
+            if (vendorId) {
+                query = query.eq("vendor_id", vendorId)
+            }
+
+            const { data, error } = await query.order("name")
 
             if (error) {
                 setError(error.message)
@@ -33,7 +40,7 @@ export function useDrinks() {
         }
 
         fetchDrinks()
-    }, [])
+    }, [vendorId])
 
     return { drinks, loading, error }
 }

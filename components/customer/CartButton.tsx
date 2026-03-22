@@ -15,9 +15,10 @@ import { placeOrder } from "@/lib/placeOrder"
 
 type CartButtonProps = {
     chairNumber: number
+    vendorId: string
 }
 
-export default function CartButton({ chairNumber }: CartButtonProps) {
+export default function CartButton({ chairNumber, vendorId }: CartButtonProps) {
     const { items, totalItems, totalPrice, increase, decrease, clearCart, addOrderId } = useCart()
     const [open, setOpen] = useState(false)
     const [placing, setPlacing] = useState(false)
@@ -28,7 +29,7 @@ export default function CartButton({ chairNumber }: CartButtonProps) {
     const handlePlaceOrder = async () => {
         setPlacing(true)
         try {
-            const orderId = await placeOrder(chairNumber, cartItems, totalPrice)
+            const orderId = await placeOrder(vendorId, chairNumber, cartItems, totalPrice)
             clearCart()
             addOrderId(orderId)
             setOrderSuccess(true)
@@ -61,7 +62,7 @@ export default function CartButton({ chairNumber }: CartButtonProps) {
 
             <SheetContent side="right" className="flex flex-col">
                 <SheetHeader>
-                    <SheetTitle>Your Cart</SheetTitle>
+                    <SheetTitle>Your Cart - Chair {chairNumber}</SheetTitle>
                 </SheetHeader>
 
                 {orderSuccess ? (

@@ -12,6 +12,7 @@ type CartItem = {
 }
 
 export async function placeOrder(
+    vendorId: string,
     chairNumber: number,
     cartItems: CartItem[],
     totalPrice: number
@@ -20,6 +21,7 @@ export async function placeOrder(
     const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
+            vendor_id: vendorId,
             chair_number: chairNumber,
             total_price: totalPrice,
             status: "new",

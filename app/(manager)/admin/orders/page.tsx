@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { useCompletedOrders } from "@/hooks/useCompletedOrders"
+import { useAuth } from "@/hooks/useAuth"
 
 function formatDateTime(dateStr: string) {
     const date = new Date(dateStr)
@@ -14,7 +15,8 @@ function formatDateTime(dateStr: string) {
 }
 
 export default function OrdersPage() {
-    const { orders, loading, error } = useCompletedOrders()
+    const { profile } = useAuth()
+    const { orders, loading, error } = useCompletedOrders(profile?.vendor_id || undefined)
 
     if (loading) {
         return (

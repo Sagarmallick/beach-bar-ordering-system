@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useInventory } from "@/hooks/useInventory"
+import { useAuth } from "@/hooks/useAuth"
 import { uploadDrinkImage } from "@/lib/uploadImage"
 import { generateDrinkImage } from "@/lib/generateImage"
 
 export default function InventoryPage() {
-    const { drinks, loading, error, addDrink, toggleAvailability, deleteDrink } = useInventory()
+    const { profile } = useAuth()
+    const { drinks, loading, error, addDrink, toggleAvailability, deleteDrink } = useInventory(profile?.vendor_id || undefined)
     const [showForm, setShowForm] = useState(false)
     const [name, setName] = useState("")
     const [price, setPrice] = useState("")

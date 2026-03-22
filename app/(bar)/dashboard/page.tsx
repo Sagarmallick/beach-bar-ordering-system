@@ -2,9 +2,11 @@
 
 import OrderGrid from "@/components/bar/OrderGrid"
 import { useOrders } from "@/hooks/useOrders"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function DashboardPage() {
-    const { orders, loading, error, updateOrderStatus } = useOrders()
+    const { profile } = useAuth()
+    const { orders, loading, error, updateOrderStatus } = useOrders(profile?.vendor_id || undefined)
 
     if (loading) {
         return (
