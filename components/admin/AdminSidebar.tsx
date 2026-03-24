@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { ThemeToggle } from "@/components/ThemeToggle"
-
+import { useAuth } from "@/hooks/useAuth"
+import { Button } from "../ui/button"
 const navItems = [
     {
         label: "Dashboard",
@@ -32,10 +33,35 @@ const navItems = [
             </svg>
         ),
     },
+    {
+        label: "QR Codes",
+        href: "/admin/qr-codes",
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                <path fillRule="evenodd" d="M4.848 2.158a1.5 1.5 0 011.06-.439h8.184a1.5 1.5 0 011.06.44l1.178 1.178a1.5 1.5 0 01.439 1.06V15.25a2.75 2.75 0 01-2.75 2.75h-8A2.75 2.75 0 013.25 15.25V4.397a1.5 1.5 0 01.44-1.06l1.158-1.179zM14.25 4.5l-1.159-1.159a.25.25 0 00-.176-.074H7.085a.25.25 0 00-.176.074L5.75 4.5h8.5zM3.25 13.25v2c0 .69.56 1.25 1.25 1.25h8c.69 0 1.25-.56 1.25-1.25v-2h-10.5z" clipRule="evenodd" />
+            </svg>
+        ),
+    },
+    {
+        label: "Live Dashboard",
+        href: "/dashboard",
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                <path fillRule="evenodd" d="M3.5 2A1.5 1.5 0 002 3.5v13A1.5 1.5 0 003.5 18h13a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0016.5 2h-13zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm-4 4a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 016 10zm8-2a.75.75 0 01.75.75v5.5a.75.75 0 01-1.5 0v-5.5A.75.75 0 0114 8z" clipRule="evenodd" />
+            </svg>
+        ),
+    },
 ]
 
 export default function AdminSidebar() {
     const pathname = usePathname()
+    const router = useRouter()
+    const { profile, signOut } = useAuth()
+
+    const handleLogout = async () => {
+        await signOut()
+        router.push("/login")
+    }
 
     return (
         <aside className="sticky top-0 h-screen w-64 border-r bg-card flex flex-col">
@@ -59,8 +85,8 @@ export default function AdminSidebar() {
                                 <Link
                                     href={item.href}
                                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                                            ? "bg-primary text-primary-foreground"
-                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                         }`}
                                 >
                                     {item.icon}
@@ -69,13 +95,41 @@ export default function AdminSidebar() {
                             </li>
                         )
                     })}
+
+                    {/* Super Admin Link */}
+                    {profile?.role === "super-admin" && (
+                        <li>
+                            <Link
+                                href="/super-admin"
+                                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-black italic transition-colors ${pathname === "/super-admin"
+                                    ? "bg-orange-500 text-white"
+                                    : "text-orange-500 hover:bg-orange-500/10"
+                                    }`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                                    <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                                </svg>
+                                SUPER ADMIN
+                            </Link>
+                        </li>
+                    )}
                 </ul>
             </nav>
 
-            {/* Footer */}
-            <div className="border-t px-4 py-3 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Theme</span>
-                <ThemeToggle />
+            {/* User Info & Logout */}
+            <div className="border-t px-4 py-3 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono text-muted-foreground uppercase">{profile?.role || "Staff"}</span>
+                    <ThemeToggle />
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="w-full rounded-none border-zinc-800 text-xs font-bold uppercase italic hover:bg-red-500 hover:text-white hover:border-red-500 transition-all"
+                >
+                    Sign Out
+                </Button>
             </div>
         </aside>
     )

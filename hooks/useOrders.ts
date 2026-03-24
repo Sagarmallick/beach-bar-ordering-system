@@ -21,14 +21,16 @@ export type Order = {
     order_items: OrderItem[]
 }
 
-export function useOrders() {
+export function useOrders(vendorId?: string) {
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
+        if (!vendorId) return
+
         async function fetchOrders() {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("orders")
                 .select(`
                     id,
@@ -43,6 +45,10 @@ export function useOrders() {
                         drinks ( name )
                     )
                 `)
+
+            if (vendorId) query = query.eq("vendor_id", vendorId)
+
+            const { data, error } = await query
                 .order("created_at", { ascending: false })
 
             if (error) {
@@ -54,7 +60,7 @@ export function useOrders() {
         }
 
         fetchOrders()
-    }, [])
+    }, [vendorId])
 
     const updateOrderStatus = async (orderId: string, newStatus: string) => {
         const { error } = await supabase
