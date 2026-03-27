@@ -20,7 +20,7 @@ export default function LoginPage() {
         setLoading(true)
         setError(null)
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
         })
@@ -28,8 +28,19 @@ export default function LoginPage() {
         if (error) {
             setError(error.message)
             setLoading(false)
-        } else {
-            router.push("/admin")
+        } else if (data.user) {
+            // Fetch profile to determine role-based redirect
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", data.user.id)
+                .single()
+
+            if (profile?.role === "super-admin") {
+                router.push("/super-admin")
+            } else {
+                router.push("/admin")
+            }
         }
     }
 

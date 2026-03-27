@@ -195,23 +195,19 @@ export default function SuperAdminPage() {
                         <CardContent className="space-y-3 text-xs text-zinc-500 font-mono">
                             <div className="flex gap-2">
                                 <span className="text-orange-500 font-bold">1.</span>
-                                <span>Create a vendor (bar) here.</span>
+                                <span>Vendor signs up at <code className="text-zinc-300">/signup</code> with their bar details.</span>
                             </div>
                             <div className="flex gap-2">
                                 <span className="text-orange-500 font-bold">2.</span>
-                                <span>Ask the bar owner to sign up at <code className="text-zinc-300">/signup</code></span>
+                                <span>Their bar is auto-created and linked to their account.</span>
                             </div>
                             <div className="flex gap-2">
                                 <span className="text-orange-500 font-bold">3.</span>
-                                <span>They will appear in &quot;Unassigned Users&quot; below.</span>
+                                <span>They can immediately log in and manage their bar!</span>
                             </div>
                             <div className="flex gap-2">
-                                <span className="text-orange-500 font-bold">4.</span>
-                                <span>Click &quot;Assign User&quot; on the vendor card to link them.</span>
-                            </div>
-                            <div className="flex gap-2">
-                                <span className="text-orange-500 font-bold">5.</span>
-                                <span>They can now log in and manage their bar!</span>
+                                <span className="text-orange-500 font-bold">ℹ</span>
+                                <span>Use this panel to manage vendors and reassign users if needed.</span>
                             </div>
                         </CardContent>
                     </Card>

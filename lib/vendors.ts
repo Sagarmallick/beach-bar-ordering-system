@@ -5,6 +5,7 @@ export type Vendor = {
     name: string
     slug: string
     qr_secret: string
+    is_subscribed: boolean
 }
 
 export async function getVendorBySlug(slug: string): Promise<Vendor | null> {
